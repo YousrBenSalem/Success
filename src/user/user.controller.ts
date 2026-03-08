@@ -23,17 +23,14 @@ import { RolesGuard } from 'src/common/guards/roles.guard';
 import { AccessTokenGuard } from 'src/common/guards/accessToken.guard';
 
 @Controller('users')
-@UseGuards(AccessTokenGuard, RolesGuard)
-@Roles('super')
 export class UserController {
   private readonly logger = new Logger(UserController.name);
 
-  constructor(private readonly userService: UserService) { }
+  constructor(private readonly userService: UserService) {}
 
   // =========================
   // CREATE USER
   // =========================
-  @UseGuards(AccessTokenGuard)
   @Post()
   async create(@Body() createUserDto: CreateUserDto, @Res() res) {
     try {
@@ -64,7 +61,12 @@ export class UserController {
     @Res() res,
   ) {
     try {
-      const result = await this.userService.findAll(+page, +limit, search, role);
+      const result = await this.userService.findAll(
+        +page,
+        +limit,
+        search,
+        role,
+      );
 
       return res.status(HttpStatus.OK).json({
         message: 'Users retrieved successfully',
@@ -107,6 +109,7 @@ export class UserController {
   // =========================
   // CHANGE PASSWORD
   // =========================
+  @UseGuards(AccessTokenGuard)
   @Patch(':id/password')
   async changePassword(
     @Param('id') id: string,
@@ -141,7 +144,9 @@ export class UserController {
     } catch (error) {
       this.logger.error(error.message);
       // Return 400 for bad password, 404 for not found
-      const status = error.message.includes('Invalid current') ? HttpStatus.BAD_REQUEST : HttpStatus.INTERNAL_SERVER_ERROR;
+      const status = error.message.includes('Invalid current')
+        ? HttpStatus.BAD_REQUEST
+        : HttpStatus.INTERNAL_SERVER_ERROR;
       return res.status(status).json({
         message: error.message,
       });
@@ -200,6 +205,4 @@ export class UserController {
       });
     }
   }
-
-
 }
